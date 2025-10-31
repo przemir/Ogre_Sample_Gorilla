@@ -1,0 +1,96 @@
+vertex_program gorilla3DVPHLSL hlsl
+{
+ 	source gorilla3D.hlsl
+	entry_point main_vp
+	target vs_5_0 vs_4_0 vs_4_0_level_9_1 vs_4_0_level_9_3
+
+	default_params	
+	{
+	   param_named_auto worldViewProj  worldviewproj_matrix
+   	}
+} 
+
+fragment_program gorilla3DFPHLSL hlsl
+{
+	source gorilla3D.hlsl
+	entry_point main_fp
+	target ps_5_0 ps_4_0 ps_4_0_level_9_1 ps_4_0_level_9_3
+}
+
+vertex_program gorilla3DVPGLSL glsl
+{
+ 	source gorilla3DVP.glsl
+	
+	default_params	
+	{
+	   param_named_auto worldViewProj  WORLDVIEWPROJ_MATRIX
+   	}
+} 
+
+fragment_program gorilla3DFPGLSL glsl
+{
+	source gorilla3DFP.glsl
+}
+
+vertex_program gorilla3DVPGLSLES glsles
+{
+ 	source gorilla3DVP.glsles
+	
+	default_params	
+	{
+	   param_named_auto worldViewProj  WORLDVIEWPROJ_MATRIX
+   	}
+} 
+
+fragment_program gorilla3DFPGLSLES glsles
+{
+	source gorilla3DFP.glsles
+}
+
+vertex_program gorilla3DVPVK glslvk
+{
+	source gorilla3DVP.glsl
+}
+
+fragment_program gorilla3DFPVK glslvk
+{
+	source gorilla3DFP.glsl
+}
+
+// Unified definition
+vertex_program gorilla3DVP unified
+{
+	delegate gorilla3DVPGLSLES 
+	delegate gorilla3DVPHLSL
+	delegate gorilla3DVPGLSL 
+	delegate gorilla3DVPVK
+}
+fragment_program gorilla3DFP unified
+{
+	delegate gorilla3DFPGLSLES 
+	delegate gorilla3DFPHLSL
+	delegate gorilla3DFPGLSL 
+	delegate gorilla3DFPVK
+}
+
+material Gorilla3D21
+{
+	technique
+	{
+		pass
+		{
+			depth_check off
+			depth_write off
+			diffuse vertexcolour
+			scene_blend alpha_blend
+			
+			vertex_program_ref gorilla3DVP
+			{
+			}
+
+			fragment_program_ref gorilla3DFP
+			{
+			}
+		}
+	}
+}

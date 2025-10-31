@@ -1,0 +1,42 @@
+
+compositor_node Sample_GorillaNode
+{
+	in 0 rt_renderwindow
+
+	target rt_renderwindow
+	{
+		pass render_scene
+		{
+    
+			load
+			{
+				all				clear
+				clear_colour	0.3 0.6 0.9 1
+			}
+			store
+			{
+				colour	store_or_resolve
+				depth	dont_care
+				stencil	dont_care
+			}
+			overlays	on
+		}
+
+		pass custom Gorilla
+		{
+			// True is the default value since 99% of the time
+			// we want to append ourselves to the previous pass.
+			skip_load_store_semantics true
+
+			profiling_id "Gorilla"
+
+			custom_id Gorilla
+		}
+	}
+}
+
+
+workspace Sample_GorillaWorkspace
+{
+	connect_output Sample_GorillaNode 0
+}
