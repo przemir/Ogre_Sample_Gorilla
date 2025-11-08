@@ -523,8 +523,6 @@ namespace Gorilla
 
     void  TextureAtlas::_create2DMaterial()
     {
-        //            Ogre::MeshPtr mesh = Ogre::MeshManager::getSingleton().createOrRetrieve(meshName.toStdString() + ".mesh", Ogre::ResourceGroupManager::AUTODETECT_RESOURCE_GROUP_NAME, false, 0, 0).first.staticCast<Ogre::Mesh>();
-
         Ogre::MaterialPtr baseMat = Ogre::MaterialManager::getSingletonPtr()->createOrRetrieve("Gorilla2D21", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME).first.staticCast<Ogre::Material>();
         //                Ogre::MaterialPtr baseMat = Ogre::MaterialManager::getSingletonPtr()->getByName("Gorilla2D21");
         if (!baseMat->isLoaded()) baseMat->load();
@@ -687,76 +685,16 @@ namespace Gorilla
             , mSceneManager(sceneManager)
             , mCamera(camera)
         {
-            //            if( !definition->mSkipLoadStoreSemantics )
-            //            {
-            //                initialize( rtvDef );
-            //            }
         }
 
         virtual void execute(const Ogre::Camera* lodCameraconst)
         {
-            //            // Execute a limited number of times?
-            //            if( mNumPassesLeft != std::numeric_limits<uint32>::max() )
-            //            {
-            //                if( !mNumPassesLeft )
-            //                    return;
-            //                --mNumPassesLeft;
-            //            }
-
             profilingBegin();
-
-            //            notifyPassEarlyPreExecuteListeners();
-
-            //    #if OGRE_VERSION >= OGRE_MAKE_VERSION( 3, 0, 0 )
-            //            analyzeBarriers();
-            //            executeResourceTransitions();
-            //            setRenderPassDescToCurrent();
-            //    #endif
-
-            //            Ogre::SceneManager *sceneManager = mCamera->getSceneManager();
-            //            sceneManager->_setCamerasInProgress( Ogre::CamerasInProgress( mCamera ) );
-            //            sceneManager->_setCurrentCompositorPass( this );
-
-            //            // Fire the listener in case it wants to change anything
-            //            notifyPassPreExecuteListeners();
-
-            ////            m_colibriManager->prepareRenderCommands();
-
-            //            Ogre::RenderSystem *renderSystem = sceneManager->getDestinationRenderSystem();
-            //            renderSystem->executeRenderPassDescriptorDelayedActions();
-
-            ////            m_colibriManager->render();
 
             Screen* screen = Ogre::any_cast<Screen*>(mCamera->getUserAny());
             screen->renderOnce();
 
-            //            sceneManager->_setCurrentCompositorPass( 0 );
-
-            //            notifyPassPosExecuteListeners();
-
             profilingEnd();
-
-
-
-
-
-
-
-
-            //            renderSystem->endRenderPassDescriptor();
-            //            mResourceTransitions.clear(); // resolveTransition() will add entries into mResourceTransitions
-            //            uint32 stagesThatWillUseYourTexture = (1u << GPT_VERTEX_PROGRAM)|(1u << GPT_FRAGMENT_PROGRAM);
-            //            resolveTransition( textureToSample, ResourceLayout::Texture,
-            //                               ResourceAccess::Read, stagesThatWillUseYourTexture );
-            //            resolveTransition( textureYouWillWriteTo, ResourceLayout::RenderTarget,
-            //                               ResourceAccess::ReadWrite, 0u );
-            //            renderSystem->executeResourceTransition( mResourceTransitions );
-
-            //            renderSystem->beginRenderPassDescriptor( ... );
-            //            renderSystem->executeRenderPassDescriptorDelayedActions();
-            //            // start rendering commands
-
-
         }
 
     protected:
