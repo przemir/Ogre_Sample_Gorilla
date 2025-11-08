@@ -1207,14 +1207,25 @@ namespace Gorilla
     Screen::Screen(Ogre::SceneManager* sceneMgr,
                    Ogre::TextureGpu* viewport,
                    TextureAtlas* atlas)
-        : LayerContainer(atlas), mViewport(viewport), mScale(1, 1, 1), mIsVisible(true), mCanRender(false)
+        : LayerContainer(atlas), mViewport(viewport), mScale(1, 1, 1), mIsVisible(true), mCanRender(false), mRenderPassDesc(NULL)
     {
         mRenderOpPtr = &mRenderOp;
         mSceneMgr = sceneMgr;
 
-        hasPSO = false;
-
         mRenderSystem = Ogre::Root::getSingletonPtr()->getRenderSystem();
+
+        mPSOCache = new Ogre::PsoCacheHelper(mRenderSystem);
+        hasPSO = false;
+        Ogre::HlmsSamplerblock s;
+        s.setAddressingMode(Ogre::TextureAddressingMode::TAM_CLAMP);
+        s.setFiltering(Ogre::TextureFilterOptions::TFO_TRILINEAR);
+        mSamplerblock = Ogre::Root::getSingletonPtr()->getHlmsManager()->getSamplerblock(s);
+
+//        if(mRenderSystem->getName() == "Vulkan Rendering Subsystem") { // This must match with OgreVulkanRenderSystem::getName();
+//          // invert y scale                                            // Here mScale.y or inside glsl? Right now it is inside glsl shader.
+//          // invert clockwise/counterclockwise culing for material     // requires copying macroblock of atlas material and modifying macroblock->mCullMode.
+//                                                                       // Or just leave "cull_hardware none" inside material.
+//        }
 
         mWidth = mViewport->getWidth();
         mHeight = mViewport->getHeight();
@@ -1235,6 +1246,10 @@ namespace Gorilla
 
     Screen::~Screen()
     {
+        Ogre::Root::getSingletonPtr()->getHlmsManager()->destroySamplerblock(mSamplerblock);
+      
+        delete mPSOCache;
+      
         for(Viewport* viewport : mViewports)
             OGRE_DELETE viewport;
     }
@@ -1253,44 +1268,38 @@ namespace Gorilla
 
         Ogre::TextureGpu* texture = mAtlas->get2DPass()->getTextureUnitState(0)->_getTexturePtr();
         mRenderSystem->_setTexture(0, texture, false);
+        mRenderSystem->_setHlmsSamplerblock(0, mSamplerblock);
 
-        Ogre::HlmsManager* hlmsManager = Ogre::Root::getSingleton().getHlmsManager();
-        //    #ifndef _DEBUG
-        Ogre::HlmsSamplerblock sampler;
-        sampler.setAddressingMode(Ogre::TextureAddressingMode::TAM_CLAMP);
-        sampler.setFiltering(Ogre::TextureFilterOptions::TFO_TRILINEAR);
-        //        mRenderSystem->_setHlmsSamplerblock(0, &sampler);
-        //    #endif
-        mRenderSystem->_setHlmsSamplerblock(0, hlmsManager->getSamplerblock(sampler));
-
-        // Destroy the last pso created before making a new one.
-        if (hasPSO){
-            mRenderSystem->_hlmsPipelineStateObjectDestroyed(&pso);
+        if (!mRenderPassDesc) {
+            mRenderPassDesc = mRenderSystem->createRenderPassDescriptor();
+            mRenderPassDesc->mColour[0].texture = mViewport;
+            mRenderPassDesc->mColour[0].loadAction = Ogre::LoadAction::Load;
+            mRenderPassDesc->mColour[0].storeAction = Ogre::StoreAction::StoreAndMultisampleResolve;
+            mRenderPassDesc->entriesModified(Ogre::RenderPassDescriptor::All);
         }
 
-        // Create the PSO for the current render of the GUI
-        pso.initialize();
-        pso.operationType = Ogre::OT_TRIANGLE_LIST;
-        pso.vertexShader = mAtlas->get2DPass()->getVertexProgram();
-        pso.pixelShader = mAtlas->get2DPass()->getFragmentProgram();
-        pso.macroblock = mAtlas->get2DPass()->getMacroblock();
-        pso.blendblock = mAtlas->get2DPass()->getBlendblock();
+        if (!hasPSO) {
+            // Lots of stuff can be done only once for the sake of efficiency.
+        
+            mPSOCache->clearState();
+        
+            mPSOCache->setRenderTarget(mRenderPassDesc);
+        
+            mPSOCache->setMacroblock(mAtlas->get2DPass()->getMacroblock());
+            mPSOCache->setBlendblock(mAtlas->get2DPass()->getBlendblock());
+            mPSOCache->setVertexShader(const_cast<Ogre::GpuProgramPtr&>(mAtlas->get2DPass()->getVertexProgram()));
+            mPSOCache->setPixelShader(const_cast<Ogre::GpuProgramPtr&>(mAtlas->get2DPass()->getFragmentProgram()));
+        }
 
-        //        pso.strongBlocks |= Ogre::HlmsPso::HasStrongMacroblock;
-        //        pso.strongBlocks |= Ogre::HlmsPso::HasStrongBlendblock;
-        //pso.clipDistances = pso.vertexShader->getNumClipDistances();
-        pso.vertexElements = renderOp.vertexData->vertexDeclaration->convertToV2(); // Required by DX11 or it will crash! :D
+        bool enablePrimitiveRestart = true;
 
-        //        Ogre::Hlms* hlms = hlmsManager->getHlms(Ogre::HLMS_UNLIT);
-        //        hlms->applyStrongBlockRules( pso, tid );
+        Ogre::VertexElement2VecVec vertexElements = renderOp.vertexData->vertexDeclaration->convertToV2();
+        mPSOCache->setVertexFormat(vertexElements,
+                                   Ogre::OT_TRIANGLE_LIST,
+                                   enablePrimitiveRestart);
 
-        // TODO: Configurable somehow (likely should be in datablock).
-        //        pso.sampleMask = 0xffffffff;
-        //        pso.enablePrimitiveRestart = false;
-
-        // Create & Set the PSO to the render system
-        mRenderSystem->_hlmsPipelineStateObjectCreated(&pso);
-        mRenderSystem->_setPipelineStateObject(&pso);
+        Ogre::HlmsPso* pso = mPSOCache->getPso();
+        mRenderSystem->_setPipelineStateObject(pso);
 
         // Send the render through. Ogre::v1::CbRenderOp cmd is needed for DX11.
         // A straight renderOperation passed in _render will work in OpenGL.

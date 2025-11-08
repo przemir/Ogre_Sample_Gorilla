@@ -38,12 +38,12 @@
 #include "Compositor/Pass/OgreCompositorPassProvider.h"
 
 
-#if OGRE_VERSION_MAJOR == 4 && OGRE_VERSION_MINOR >= 0
-#define GORILLA_V40
-#endif
-
 #if OGRE_VERSION_MAJOR > 2 || (OGRE_VERSION_MAJOR == 2 && OGRE_VERSION_MINOR > 2)
 #define GORILLA_PSO   // PSO is somewhere between 2.3 and 3.0
+
+#include <OgreHlmsPso.h>
+#include <OgrePsoCacheHelper.h>
+#include <OgreRenderPassDescriptor.h>
 #endif
 
 #ifndef GORILLA_USES_EXCEPTIONS
@@ -1004,8 +1004,11 @@ namespace Gorilla
         // Internal -- Prepares RenderSystem for rendering.
 #ifdef GORILLA_PSO
         void _prepareRenderSystem(Ogre::v1::RenderOperation &renderOp);
-        Ogre::HlmsPso pso;
         bool hasPSO;
+        
+        const Ogre::HlmsSamplerblock* mSamplerblock;
+        Ogre::PsoCacheHelper* mPSOCache;
+        Ogre::RenderPassDescriptor* mRenderPassDesc;
 #else
         void _prepareRenderSystem();
 #endif

@@ -68,6 +68,7 @@ material Gorilla2D21
 			depth_write off
 			diffuse vertexcolour
 			scene_blend alpha_blend
+			cull_hardware none  // Vulkan requires opposite because of y inverse
 
 			vertex_program_ref gorilla2DVP
 			{

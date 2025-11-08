@@ -14,6 +14,8 @@ namespace Demo
         Ogre::Light *mDirectionalLight;
         Gorilla::Screen* mScreen;
         Gorilla::Layer*  mLayer;
+        Gorilla::Rectangle* mRect;
+        float mTimeSinceStart;
         virtual void generateDebugText( float timeSinceLast, Ogre::String &outText );
     public:
         Gorilla::Silverback* mSilverback;

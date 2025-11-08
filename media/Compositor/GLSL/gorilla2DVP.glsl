@@ -25,5 +25,5 @@ void main()
 {
     outVs.oUv = vec4(uv0, 1.0, 1.0);
     outVs.oColor = colour;
-    gl_Position = vec4(vertex, 1.0);
+    gl_Position = vec4(vertex.x, vulkan( - ) vertex.y, vertex.z, 1.0);
 }

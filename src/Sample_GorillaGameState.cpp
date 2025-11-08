@@ -41,7 +41,8 @@ namespace Demo
 {
     Sample_GorillaGameState::Sample_GorillaGameState( const Ogre::String &helpDescription ) :
         TutorialGameState( helpDescription ),
-        mDirectionalLight( 0 )
+        mDirectionalLight( 0 ),
+        mTimeSinceStart(0.0f)
     {
     }
     //-----------------------------------------------------------------------------------
@@ -109,8 +110,8 @@ namespace Demo
         Gorilla::Caption* caption = mLayer->createCaption(24, 450.0f, 500.0, "Gorilla text");
         caption->colour(Gorilla::Colours::Black);
 
-        Gorilla::Rectangle* rect = mLayer->createRectangle(475.0f, 550.0f, 100.0f, 100.0f);
-        rect->background_image("ogrehead");
+        mRect = mLayer->createRectangle(475.0f, 550.0f, 100.0f, 100.0f);
+        mRect->background_image("ogrehead");
     }
 
     //-----------------------------------------------------------------------------------
@@ -125,7 +126,9 @@ namespace Demo
     //-----------------------------------------------------------------------------------
     void Sample_GorillaGameState::update( float timeSinceLast )
     {
+        mTimeSinceStart += timeSinceLast;
 
+        mRect->position(475.0f + 100.0f*std::sin(mTimeSinceStart), 550.0f);
 
         TutorialGameState::update( timeSinceLast );
     }
